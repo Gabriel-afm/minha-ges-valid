@@ -1,120 +1,150 @@
-/* Configuração do tema Black */
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #121212; /* Fundo Preto */
-  color: #fff;
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCFDmBwvqpMcPnP6mTm39NqyHRk48GjKW4",
+  authDomain: "minha-gest.firebaseapp.com",
+  databaseURL: "https://minha-gest-default-rtdb.firebaseio.com",
+  projectId: "minha-gest",
+  storageBucket: "minha-gest.firebasestorage.app",
+  messagingSenderId: "850400110245",
+  appId: "1:850400110245:web:55741777e4fbeb38664f4c",
+  measurementId: "G-QZ2ZPLZ1NV"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Função para adicionar produto ao Firestore
+async function addProduct(name, expirationDate) {
+  try {
+    const docRef = await addDoc(collection(db, "produtos"), {
+      name: name,
+      expirationDate: expirationDate
+    });
+    console.log("Produto adicionado com ID: ", docRef.id);
+    loadProducts();  // Atualiza a lista de produtos
+  } catch (e) {
+    console.error("Erro ao adicionar produto: ", e);
+  }
 }
 
-.container {
-  text-align: center;
-  background-color: #1E1E1E;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  padding: 30px;
-  width: 600px;
+// Função para listar produtos do Firestore e verificar validade
+async function loadProducts() {
+  const querySnapshot = await getDocs(collection(db, "produtos"));
+  const productList = document.getElementById("product-list");
+  productList.innerHTML = '';  // Limpa a lista antes de adicionar
+
+  // Limpa os alertas
+  const alertsDiv = document.getElementById("alerts");
+  alertsDiv.innerHTML = ''; 
+
+  let hasAlert = false;
+
+  querySnapshot.forEach((doc) => {
+    const product = doc.data();
+    const li = document.createElement("tr");
+
+    const productName = document.createElement("td");
+    productName.textContent = product.name;
+
+    const expirationDate = document.createElement("td");
+    expirationDate.textContent = product.expirationDate;
+
+    // Verifica se o produto está próximo do vencimento
+    const today = new Date();
+    const expiration = new Date(product.expirationDate);
+    const daysUntilExpiration = Math.ceil((expiration - today) / (1000 * 3600 * 24));
+
+    let alertMessage = '';
+
+    if (daysUntilExpiration <= 7 && daysUntilExpiration >= 0) {
+      alertMessage = ` (Vencimento em ${daysUntilExpiration} dias!)`;
+      alertsDiv.innerHTML += `<div class="alert alert-red">Alerta: Produto ${product.name} vencendo em ${daysUntilExpiration} dias!</div>`;
+      hasAlert = true;
+    } else if (daysUntilExpiration <= 30 && daysUntilExpiration > 7) {
+      alertMessage = ` (Vencimento em ${daysUntilExpiration} dias!)`;
+      alertsDiv.innerHTML += `<div class="alert alert-yellow">Alerta: Produto ${product.name} vencendo em ${daysUntilExpiration} dias!</div>`;
+      hasAlert = true;
+    } else if (daysUntilExpiration <= 60 && daysUntilExpiration > 30) {
+      alertMessage = ` (Vencimento em ${daysUntilExpiration} dias!)`;
+      alertsDiv.innerHTML += `<div class="alert alert-green">Alerta: Produto ${product.name} vencendo em ${daysUntilExpiration} dias!</div>`;
+      hasAlert = true;
+    }
+
+    li.appendChild(productName);
+    li.appendChild(expirationDate);
+
+    // Adicionando o botão de exclusão
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Excluir";
+    deleteButton.classList.add("delete");
+    deleteButton.onclick = () => deleteProduct(doc.id);
+
+    // Adicionando botão de edição
+    const editButton = document.createElement("button");
+    editButton.textContent = "Editar";
+    editButton.classList.add("edit");
+    editButton.onclick = () => editProduct(doc.id, product.name, product.expirationDate);
+
+    const actions = document.createElement("td");
+    actions.appendChild(editButton);
+    actions.appendChild(deleteButton);
+
+    li.appendChild(actions);
+    productList.appendChild(li);
+  }
+
+  if (!hasAlert) {
+    alertsDiv.innerHTML += `<div class="alert alert-green">Nenhum produto com validade próxima.</div>`;
+  }
 }
 
-h1 {
-  margin-bottom: 20px;
-  color: #4CAF50; /* Verde para o título */
+// Função para deletar um produto do Firestore
+async function deleteProduct(productId) {
+  try {
+    const productRef = doc(db, "produtos", productId);
+    await deleteDoc(productRef);
+    loadProducts();  // Atualiza a lista após exclusão
+  } catch (e) {
+    console.error("Erro ao excluir produto: ", e);
+  }
 }
 
-#alerts {
-  margin-bottom: 20px;
+// Função para editar um produto
+function editProduct(productId, currentName, currentExpirationDate) {
+  document.getElementById("product-name").value = currentName;
+  document.getElementById("expiration-date").value = currentExpirationDate;
+
+  // Remove o produto existente antes de salvar a edição
+  document.getElementById("product-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const newName = document.getElementById("product-name").value;
+    const newExpirationDate = document.getElementById("expiration-date").value;
+
+    const productRef = doc(db, "produtos", productId);
+    try {
+      await updateDoc(productRef, {
+        name: newName,
+        expirationDate: newExpirationDate
+      });
+      console.log("Produto editado com sucesso!");
+      loadProducts();  // Atualiza a lista após a edição
+    } catch (e) {
+      console.error("Erro ao editar produto: ", e);
+    }
+    document.getElementById("product-form").reset();  // Limpa o formulário
+  };
 }
 
-#alerts .alert {
-  padding: 10px;
-  margin: 5px 0;
-  border-radius: 5px;
-}
+// Carrega os produtos ao inicializar a página
+loadProducts();
 
-.alert-red {
-  background-color: red;
-  color: white;
-}
-
-.alert-yellow {
-  background-color: yellow;
-  color: black;
-}
-
-.alert-green {
-  background-color: #4CAF50; /* Verde */
-  color: white;
-}
-
-/* Estilo do formulário */
-#product-form input {
-  padding: 10px;
-  margin: 10px;
-  width: 80%;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #333;
-  color: #fff;
-}
-
-button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #2196F3; /* Azul */
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #1976D2; /* Azul mais escuro */
-}
-
-/* Estilo da tabela */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-th, td {
-  padding: 10px;
-  border: 1px solid #444;
-  text-align: left;
-}
-
-th {
-  background-color: #2196F3; /* Azul */
-}
-
-tr:nth-child(even) {
-  background-color: #333;
-}
-
-tr:nth-child(odd) {
-  background-color: #222;
-}
-
-button.edit {
-  background-color: #FF9800; /* Laranja */
-}
-
-button.edit:hover {
-  background-color: #F57C00;
-}
-
-button.delete {
-  background-color: #f44336; /* Vermelho */
-}
-
-button.delete:hover {
-  background-color: #e53935;
-}
-
-button:hover {
-  opacity: 0.8;
-}
+// Adiciona um produto quando o formulário é enviado
+document.getElementById("product-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = document.getElementById("product-name").value;
+  const expirationDate = document.getElementById("expiration-date").value;
+  addProduct(name, expirationDate);
+  document.getElementById("product-form").reset(); // Limpa o formulário
+});
