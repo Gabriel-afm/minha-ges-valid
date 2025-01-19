@@ -9,7 +9,7 @@
 <body>
   <div class="container">
     <h1>Gestão de Estoque</h1>
-    
+
     <div id="alerts"></div>
 
     <form id="product-form">
@@ -18,7 +18,16 @@
       <button type="submit">Adicionar Produto</button>
     </form>
 
-    <ul id="product-list"></ul>
+    <table id="product-table">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Data de Validade</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="product-list"></tbody>
+    </table>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
