@@ -1,39 +1,41 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Produtos</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Produtos</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Gestão de Produtos</h1>
-
-    <!-- Formulário para adicionar produtos -->
-    <form id="product-form">
-      <input type="text" id="product-name" placeholder="Nome do produto" required>
-      <input type="date" id="expiration-date" required>
-      <button type="submit">Adicionar Produto</button>
-    </form>
-
-    <!-- Alertas de validade -->
     <div id="alerts"></div>
-
-    <!-- Tabela para listar produtos -->
+    
+    <h1>Cadastro de Produtos</h1>
+    
+    <form id="product-form">
+        <label for="product-name">Nome do Produto:</label>
+        <input type="text" id="product-name" required><br><br>
+        
+        <label for="expiration-date">Data de Validade:</label>
+        <input type="date" id="expiration-date" required><br><br>
+        
+        <button type="submit">Adicionar Produto</button>
+    </form>
+    
+    <h2>Lista de Produtos</h2>
+    
     <table id="product-list">
-      <thead>
-        <tr>
-          <th>Nome do Produto</th>
-          <th>Data de Validade</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Data de Validade</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
     </table>
-  </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-database.js"></script>
-  <script src="script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
